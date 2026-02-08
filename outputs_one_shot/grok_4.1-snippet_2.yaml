@@ -1,0 +1,43 @@
+- name: csr_address_width
+  description: The number of bits used to encode the CSR address in CSR-access instructions.
+  type: integer
+  value: 12
+  source_quote: "a 12-bit encoding space (csr[11:0])"
+  notes: This is fixed by the ISA, providing a maximum addressable space.
+
+- name: max_possible_csrs
+  description: The maximum number of distinct CSRs that can be addressed using the allocated encoding space.
+  type: integer
+  value: 4096
+  source_quote: "up to 4,096 CSRs"
+  notes: Implementations may support fewer than this maximum; the "up to" indicates the implemented count is at the discretion of the implementer.
+
+- name: follow_conventional_accessibility_encoding
+  description: Whether the implementation adheres to the convention of using the upper 4 bits of the CSR address to encode read/write accessibility and minimum privilege level.
+  type: boolean
+  source_quote: "By convention, the upper 4 bits of the CSR address (csr[11:8]) are used to encode the read and write accessibility of the CSRs according to privilege level as shown in Table 1."
+  notes: The use of "by convention" indicates this encoding is recommended but not strictly mandated by the ISA, allowing potential alternative accessibility mechanisms.
+
+- name: rw_access_bit_patterns
+  description: The bit patterns in csr[11:10] that designate a CSR as read/write under the conventional encoding.
+  type: enum_set
+  possible_values:
+    - "00"
+    - "01"
+    - "10"
+  source_quote: "whether the register is read/write (00,01, or 10)"
+  notes: The provision of three distinct patterns for read/write (instead of one) provides implementers flexibility in selecting which pattern to use for a given read/write CSR, potentially for categorization or extension purposes.
+
+- name: ro_access_bit_pattern
+  description: The bit pattern in csr[11:10] that designates a CSR as read-only under the conventional encoding.
+  type: string
+  value: "11"
+  source_quote: "read-only (11)"
+  notes: Fixed value under the convention for read-only CSRs.
+
+- name: privilege_level_encoding_bits
+  description: The bit field in the CSR address used to encode the lowest privilege level permitted to access the CSR under the conventional scheme.
+  type: bit_range
+  bits: csr[9:8]
+  source_quote: "The next two bits (csr[9:8]) encode the lowest privilege level that can access the CSR."
+  notes: Part of the conventional encoding; the exact mapping of values to specific privilege modes is detailed in Table 1 (not provided here), but the use of these specific bits is conventional rather than mandatory.

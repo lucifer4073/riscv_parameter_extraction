@@ -1,0 +1,31 @@
+- name: csr_address_space_size
+  description: The total number of CSR addresses available in the encoding space.
+  type: Integer
+  default: 4096
+  source_quote: "The standard RISC-V ISA sets aside a 12-bit encoding space (csr[11:0]) for up to 4,096 CSRs."
+
+- name: csr_accessibility_convention_enforcement
+  description: Whether the implementation strictly adheres to the conventional R/W and privilege mapping for all implemented CSRs.
+  type: Boolean
+  source_quote: "By convention, the upper 4 bits of the CSR address (csr[11:8]) are used to encode the read and write accessibility"
+
+- name: implemented_csr_set
+  description: The specific set of CSR addresses actually implemented out of the 4,096 possible encodings.
+  type: List of Hex
+  source_quote: "for up to 4,096 CSRs"
+
+- name: csr_read_only_protection
+  description: Enforcement mechanism that prevents write access to CSRs where bits [11:10] are set to 11.
+  type: Boolean
+  source_quote: "The top two bits (csr[11:10]) indicate whether the register is read/write (00,01, or 10) or read-only (11)."
+
+- name: csr_minimum_privilege_mapping
+  description: The mapping of bits [9:8] to the specific privilege levels (U, S, H, or M) required for access.
+  type: Enum
+  options: [User, Supervisor, Hypervisor, Machine]
+  source_quote: "The next two bits (csr[9:8]) encode the lowest privilege level that can access the CSR."
+
+- name: custom_csr_address_ranges
+  description: Definition of non-standard CSR addresses that may deviate from the standard convention if allowed by specific profiles.
+  type: Address Range
+  source_quote: "The standard RISC-V ISA sets aside a 12-bit encoding space... By convention"

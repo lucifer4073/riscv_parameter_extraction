@@ -1,0 +1,21 @@
+- name: cache_block_size
+  description: The size of each cache block in bytes.
+  type: Integer
+  source_quote: In the initial set of CMO extensions, the size of a cache block shall be uniform throughout the system.
+  rationale: This parameter defines the granularity of memory access and caching, significantly impacting performance, memory
+    usage, and cache coherence in systems supporting CMO extensions.
+  scope: System-wide
+  unit: bytes
+  constraints: Must be a power of two or NAPOT, and uniform across the system for initial CMO implementations.
+  additional_requirements: Software can discover this parameter through system interfaces provided by the execution environment.
+- name: cache_block_alignment
+  description: The alignment requirement for cache blocks, specified as naturally aligned power-of-two (NAPOT).
+  type: String
+  possible_values:
+  - power_of_two
+  - napot
+  source_quote: each of which represents a contiguous, naturally aligned power-of-two (or NAPOT) range of memory locations.
+  rationale: This parameter ensures efficient memory access and coherency by aligning cache blocks to natural boundaries,
+    which optimizes cache performance and reduces fragmentation.
+  scope: System-wide
+  constraints: Alignment must be natural and to a power-of-two or NAPOT for caches in CMO-compliant systems.

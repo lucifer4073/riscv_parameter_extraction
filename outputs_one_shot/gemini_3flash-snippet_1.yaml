@@ -1,0 +1,50 @@
+- name: cache_block_size
+  description: >
+    The size of a cache block in bytes.
+    Must be a naturally aligned power-of-two (NAPOT).
+  type: Integer
+  properties:
+    is_uniform: true
+    is_napot: true
+  source_quote: >
+    the size of a cache block are both implementation-specific
+
+- name: cache_capacity
+  description: >
+    The total storage capacity of the cache.
+  type: Integer
+  source_quote: >
+    The capacity and organization of a cache ... are both implementation-specific
+
+- name: cache_organization
+  description: >
+    The structural layout of the cache
+    (e.g., associativity, number of sets).
+  type: String
+  source_quote: >
+    The capacity and organization of a cache ... are both implementation-specific
+
+- name: discovery_mechanism
+  description: >
+    The method or interface provided to software
+    to determine cache characteristics.
+  type: String
+  source_quote: >
+    the execution environment provides software a means to discover
+    information about the caches and cache blocks
+
+- name: cache_hierarchy_levels
+  description: >
+    The number of levels in the cache hierarchy.
+  type: Integer
+  source_quote: >
+    discover information about the caches and cache blocks in a system
+
+- name: address_mapping_strategy
+  description: >
+    The specific physical address mapping used
+    to identify a cache block.
+  type: Address Range
+  source_quote: >
+    A cache block is identified by any of the physical addresses
+    corresponding to the underlying memory locations.

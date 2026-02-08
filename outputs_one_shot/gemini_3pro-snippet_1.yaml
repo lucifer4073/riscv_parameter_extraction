@@ -1,0 +1,32 @@
+- name: cache_capacity
+  description: The total data storage size of the cache.
+  type: Integer (Bytes)
+  source_quote: "The capacity ... of a cache ... [is] implementation-specific"
+  trigger_category: Explicit Flexibility 
+
+- name: cache_organization
+  description: The internal structural design of the cache (e.g., associativity, set-mapping strategy).
+  type: String / Enum
+  source_quote: "The ... organization of a cache ... [is] implementation-specific"
+  trigger_category: Explicit Flexibility 
+
+- name: cache_block_size
+  description: The size of the contiguous memory range represented by a single cache block.
+  type: Integer (Bytes)
+  source_quote: "the size of a cache block ... [is] implementation-specific"
+  constraints: 
+    - "Must be a naturally aligned power-of-two (NAPOT) range"
+    - "In the initial set of CMO extensions, the size of a cache block shall be uniform throughout the system"
+  trigger_category: Explicit Flexibility 
+
+- name: cache_discovery_mechanism
+  description: The specific method or interface provided by the execution environment that allows software to query cache properties.
+  type: Interface / Mechanism
+  source_quote: "the execution environment provides software a means to discover information about the caches"
+  trigger_category: General Discretion (Implied by "provides a means") 
+
+- name: cmo_system_wide_uniformity
+  description: Defines whether cache block sizes are consistent across the entire system hierarchy. While mandated for initial CMOs, this implies an architectural parameter for future or non-CMO configurations.
+  type: Boolean
+  source_quote: "In the initial set of CMO extensions, the size of a cache block shall be uniform throughout the system."
+  trigger_category: Conditional Existence / Limits 

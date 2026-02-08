@@ -1,0 +1,29 @@
+- name: cache_block_size
+  description: Size of a contiguous, naturally aligned power-of-two (or NAPOT) range of memory locations within a cache.
+  type: Integer
+  source_quote: The size of a cache block shall be uniform throughout the system.
+  rationale: This parameter is architecturally significant as it allows software to discover information about cache organization
+    and capacity in the system.
+  scope: System-wide
+- name: cache_capacity
+  description: Total storage capacity of a cache, including both data and other metadata.
+  type: Integer
+  source_quote: The capacity and organization of a cache... are both implementation-specific.
+  rationale: This parameter is architecturally significant as it allows software to discover information about the caches
+    in a system.
+  scope: System-wide
+- name: cache_block_id
+  description: Identification method for cache blocks, where any physical address corresponding to underlying memory locations
+    can be used.
+  type: String
+  source_quote: A cache block is identified by any of the physical addresses corresponding to the underlying memory locations.
+  rationale: This parameter is architecturally significant as it provides a means for software to discover information about
+    cache organization and capacity in the system.
+  scope: System-wide
+- name: cmo_cache_uniformity
+  description: Whether or not the size of a cache block is uniform throughout the system, initially set by CMO extensions.
+  type: Boolean
+  source_quote: In the initial set of CMO extensions, the size of a cache block shall be uniform throughout the system.
+  rationale: This parameter is architecturally significant as it allows software to discover information about cache organization
+    and capacity in the system.
+  scope: System-wide

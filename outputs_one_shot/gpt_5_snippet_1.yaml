@@ -1,0 +1,37 @@
+- name: cache_block_size
+  description: Size in bytes of a cache block, which represents a contiguous, naturally aligned power-of-two (NAPOT) range of memory locations.
+  type: Integer
+  properties:
+    alignment: NAPOT
+    uniform_across_system: true
+  source_quote: "the size of a cache block are both implementation-specific each of which represents a contiguous, naturally aligned power-of-two (or NAPOT) range of memory locations the size of a cache block shall be uniform throughout the system"
+
+- name: cache_capacity
+  description: Total storage capacity of a cache.
+  type: Integer
+  source_quote: "The capacity ... of a cache ... are both implementation-specific"
+
+- name: cache_organization
+  description: Internal organization of the cache (e.g., associativity, number of sets, hierarchy structure).
+  type: String
+  source_quote: "The capacity and organization of a cache ... are both implementation-specific"
+
+- name: cache_block_addressing_granularity
+  description: The granularity at which physical addresses identify cache blocks (any physical address within the block identifies it).
+  type: Enum
+  properties:
+    allowed_values:
+      - any_address_within_block
+  source_quote: "A cache block is identified by any of the physical addresses corresponding to the underlying memory locations"
+
+- name: cache_discovery_mechanism
+  description: Mechanism provided by the execution environment that allows software to discover cache and cache-block information.
+  type: String
+  source_quote: "the execution environment provides software a means to discover information about the caches and cache blocks in a system"
+
+- name: cache_block_size_uniformity_requirement
+  description: Whether cache block size must be uniform across all caches in the system.
+  type: Boolean
+  properties:
+    fixed_value: true
+  source_quote: "In the initial set of CMO extensions, the size of a cache block shall be uniform throughout the system"

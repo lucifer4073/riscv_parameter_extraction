@@ -1,0 +1,12 @@
+- name: csr_read_write_accessibility
+  description: Encoding for read and write accessibility of CSRs according to privilege level
+  type: Integer
+  source_quote: The top two bits (csr[11:10]) indicate whether the register is read/write (00,01, or 10) or read-only (11).
+  rationale: This parameter is architecturally significant as it determines how CSRs can be accessed.
+  scope: CSR
+- name: csr_privilege_level
+  description: Lowest privilege level that can access a CSR
+  type: Integer
+  source_quote: The next two bits (csr[9:8]) encode the lowest privilege level that can access the CSR.
+  rationale: This parameter is architecturally significant as it determines what privilege levels have access to each CSR.
+  scope: CSR

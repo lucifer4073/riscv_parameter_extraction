@@ -1,0 +1,41 @@
+- name: cache_capacity
+  description: The storage capacity of each individual cache in the system.
+  type: integer
+  units: bytes
+  variability: per_cache
+  source_quote: "The capacity and organization of a cache and the size of a cache block are both implementation-specific"
+  notes: Different caches may have different capacities.
+
+- name: cache_organization
+  description: The structural organization of each individual cache (e.g., associativity, replacement policy, or other internal structuring).
+  type: string
+  variability: per_cache
+  source_quote: "The capacity and organization of a cache and the size of a cache block are both implementation-specific"
+  notes: Different caches may have different organizations.
+
+- name: cache_block_size
+  description: The size of a cache block, which must be the same for all caches in the system under the initial CMO extensions.
+  type: integer
+  units: bytes
+  constraints:
+    uniform_across_system: true
+    alignment: naturally_aligned
+    contiguous: true
+  source_quote: "the size of a cache block are both implementation-specific and In the initial set of CMO extensions, the size of a cache block shall be uniform throughout the system."
+  notes: Size is implementation-chosen but required to be uniform.
+
+- name: cache_block_range_representation
+  description: Whether a cache block represents a strictly power-of-two range or a NAPOT (naturally aligned power-of-two) range of memory locations.
+  type: enum
+  possible_values:
+    - power_of_two
+    - napot
+  source_quote: "contiguous, naturally aligned power-of-two (or NAPOT) range of memory locations"
+  notes: The parenthetical "or NAPOT" indicates implementers may choose either representation.
+
+- name: cache_information_discovery_mechanism
+  description: The mechanism provided by the execution environment for software to discover details about caches and cache blocks (including capacity, organization, block size, etc.).
+  type: implementation_defined
+  required: true
+  source_quote: "the execution environment provides software a means to discover information about the caches and cache blocks in a system."
+  notes: The existence of a discovery mechanism is required, but its form is left entirely to the implementation.

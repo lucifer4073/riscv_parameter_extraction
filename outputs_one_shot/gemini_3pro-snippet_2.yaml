@@ -1,0 +1,17 @@
+- name: implemented_csr_set
+  description: The specific subset of Control and Status Registers (CSRs) actually instantiated in the design, out of the total available encoding space.
+  type: List of Addresses / Bitmask
+  source_quote: "The standard RISC-V ISA sets aside a 12-bit encoding space (csr[11:0]) for up to 4,096 CSRs." 
+  trigger_category: Ranges/Limits ("Up to")
+
+- name: csr_privilege_access_map
+  description: The configuration of CSR addresses chosen by the implementer (particularly for custom CSRs) which determines their read/write accessibility and minimum privilege level requirements based on the fixed address bit encoding.
+  type: Mapping (Address -> {Access Type, Privilege Level})
+  source_quote: "By convention, the upper 4 bits of the CSR address (csr[11:8]) are used to encode the read and write accessibility... [and] the lowest privilege level" 
+  trigger_category: Implicit Flexibility (via address selection)
+
+- name: csr_rw_encoding_variant
+  description: The specific encoding prefix (00, 01, or 10) selected for a Read/Write register address. While all three indicate R/W, the specific choice for a given register is determined by the implementation's address map.
+  type: Enum {00, 01, 10}
+  source_quote: "The top two bits (csr[11:10]) indicate whether the register is read/write (00,01, or 10)" 
+  trigger_category: Explicit Flexibility (List of options)

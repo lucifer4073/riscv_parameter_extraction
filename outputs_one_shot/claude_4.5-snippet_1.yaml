@@ -1,0 +1,71 @@
+- name: cache_capacity
+  description: The total storage capacity of a cache in the system
+  type: Integer
+  unit: bytes
+  source_quote: "The capacity and organization of a cache and the size of a cache block are both implementation-specific"
+  rationale: The specification explicitly states that cache capacity is implementation-specific, meaning implementers can choose different cache sizes
+  constraints: Must be a positive integer value
+  scope: Per cache instance in the system
+  
+- name: cache_organization
+  description: The organizational structure of the cache (e.g., direct-mapped, set-associative, fully-associative)
+  type: Enum
+  possible_values:
+    - direct_mapped
+    - set_associative
+    - fully_associative
+    - other_implementation_specific
+  source_quote: "The capacity and organization of a cache and the size of a cache block are both implementation-specific"
+  rationale: Cache organization is explicitly marked as implementation-specific, allowing various cache architectures
+  scope: Per cache instance in the system
+  
+- name: cache_block_size
+  description: The size of a single cache block (cache line) in bytes
+  type: Integer
+  unit: bytes
+  source_quote: "The capacity and organization of a cache and the size of a cache block are both implementation-specific"
+  rationale: Cache block size is implementation-specific, though it must be uniform throughout the system
+  constraints:
+    - Must be a power of two
+    - Must be naturally aligned
+    - Must be uniform throughout the system (as per specification requirement)
+  scope: System-wide (uniform across all caches)
+  additional_requirements: "In the initial set of CMO extensions, the size of a cache block shall be uniform throughout the system"
+  
+- name: cache_block_alignment
+  description: The alignment requirement for cache blocks in memory
+  type: String
+  value: naturally_aligned_power_of_two_or_napot
+  source_quote: "each of which represents a contiguous, naturally aligned power-of-two (or NAPOT) range of memory locations"
+  rationale: The specification indicates cache blocks can be either naturally aligned power-of-two or NAPOT (Naturally Aligned Power Of Two), giving implementers flexibility in alignment strategy
+  constraints: Must be either naturally aligned power-of-two or NAPOT
+  scope: System-wide
+  
+- name: cache_discovery_mechanism
+  description: The method by which the execution environment provides software information about caches and cache blocks
+  type: Implementation_Specific_Interface
+  source_quote: "the execution environment provides software a means to discover information about the caches and cache blocks in a system"
+  rationale: While discovery must be provided, the specific mechanism is not specified and is left to the implementation
+  constraints: Must provide a way for software to discover cache capacity, organization, and block size
+  scope: System-wide
+  interface_type: Execution environment dependent
+  
+- name: number_of_cache_levels
+  description: The number of cache hierarchy levels present in the system
+  type: Integer
+  source_quote: "the execution environment provides software a means to discover information about the caches and cache blocks in a system"
+  rationale: The use of plural "caches" implies multiple caches may exist, and the number is implementation-specific
+  constraints: Must be at least 0 (system may have no caches), typically 1-3 in practice
+  scope: System-wide
+  
+- name: cache_topology
+  description: The hierarchical arrangement and sharing of caches among cores/harts
+  type: Implementation_Specific_Structure
+  source_quote: "the execution environment provides software a means to discover information about the caches and cache blocks in a system"
+  rationale: Multiple caches implies a topology (private L1, shared L2, etc.) which must be discoverable but is not specified by the ISA
+  constraints: Must be discoverable through the execution environment interface
+  scope: System-wide
+  properties:
+    - cache_sharing_domain
+    - cache_inclusion_policy
+    - cache_coherence_protocol

@@ -1,0 +1,42 @@
+- name: csr_read_write_accessibility
+  description: Accessibility of CSRs according to upper 4 bits of address (csr[11:8])
+  type: Enum
+  source_quote: The standard RISC-V ISA sets aside a 12-bit encoding space (csr[11:0]) for up to 4,096 CSRs. By convention,
+    the upper 4 bits of the CSR address (csr[11:8]) are used to encode the read and write accessibility of the CSRs according
+    to privilege level.
+  rationale: This parameter defines how CSRs can be accessed based on their address encoding.
+  constraints:
+  - csr_read_write_accessibility must be one of [00, 01, 10, 11]
+  possible_values:
+  - 0
+  - 1
+  - 10
+  - 11
+- name: csr_privilege_level_accessibility
+  description: Lowest privilege level that can access the CSR based on upper 2 bits (csr[9:8])
+  type: Enum
+  source_quote: The next two bits (csr[9:8]) encode the lowest privilege level that can access the CSR.
+  rationale: This parameter specifies the minimum privilege required to access a given CSR.
+  constraints:
+  - csr_privilege_level_accessibility must be one of [0, 1]
+  possible_values:
+  - 0
+  - 1
+- name: csr_read_only_flag
+  description: Indicator for whether a CSR is read-only (csr[11:10] = 11)
+  type: Boolean
+  source_quote: The top two bits (csr[11:10]) indicate whether the register is read/write (00,01, or 10) or read-only (11).
+  rationale: This parameter determines if a CSR can only be read.
+  constraints:
+  - If csr_read_only_flag is true, then csr_read_write_accessibility must be one of [11]
+- name: csr_read_write_mask
+  description: Mask for identifying read/write CSRs (csr[11:10] = 00, 01, or 10)
+  type: Enum
+  source_quote: The top two bits (csr[11:10]) indicate whether the register is read/write (00,01, or 10) or read-only (11).
+  rationale: This parameter identifies CSRs that can be both read and written.
+  constraints:
+  - csr_read_write_mask must be one of [00, 01, 10]
+  possible_values:
+  - 0
+  - 1
+  - 10

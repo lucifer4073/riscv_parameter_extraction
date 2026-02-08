@@ -1,0 +1,39 @@
+- name: cache_block_size
+  description: Size of each cache block in bytes
+  type: Integer
+  source_quote: The capacity and organization of a cache and the size of a cache block are both implementation-specific, and
+    the execution environment provides software a means to discover information about the caches and cache blocks in a system.
+    In the initial set of CMO extensions, the size of a cache block shall be uniform throughout the system.
+  rationale: The cache block size is architecturally significant as it affects memory access patterns and performance.
+  scope: Per-cache
+  constraints: Must be a power-of-two value
+  possible_values:
+  - 64
+  - 128
+  - 256
+  - 512
+- name: cache_capacity
+  description: Total capacity of the cache in bytes
+  type: Integer
+  source_quote: The capacity and organization of a cache and the size of a cache block are both implementation-specific, and
+    the execution environment provides software a means to discover information about the caches and cache blocks in a system.
+  rationale: Cache capacity affects overall memory performance and is crucial for understanding cache behavior.
+  scope: System-wide
+- name: cache_alignment
+  description: Alignment requirement for cache blocks
+  type: String
+  source_quote: A cache block is identified by any of the physical addresses corresponding to the underlying memory locations.
+    The capacity and organization of a cache and the size of a cache block are both implementation-specific, and the execution
+    environment provides software a means to discover information about the caches and cache blocks in a system.
+  rationale: Alignment requirements impact how data is stored and accessed within the cache.
+  scope: System-wide
+  possible_values:
+  - 32
+  - 64
+  - 128
+- name: cache_unified_size
+  description: Uniform size of all cache blocks in a system as mandated by CMO extensions
+  type: Boolean
+  source_quote: In the initial set of CMO extensions, the size of a cache block shall be uniform throughout the system.
+  rationale: Ensures consistency across the system and simplifies certain architectural designs.
+  scope: System-wide

@@ -1,0 +1,141 @@
+- name: csr_address_space_utilization
+  description: The actual number of CSRs implemented out of the 4,096 possible CSR encodings
+  type: Integer
+  unit: count
+  source_quote: "The standard RISC-V ISA sets aside a 12-bit encoding space (csr[11:0]) for up to 4,096 CSRs"
+  rationale: The specification provides space for "up to 4,096 CSRs", implying implementations may use fewer than the maximum
+  constraints:
+    min: 0
+    max: 4096
+  scope: Per implementation
+  properties:
+    address_range: "0x000 to 0xFFF"
+    encoding_bits: 12
+  
+- name: implemented_csr_addresses
+  description: The specific set of CSR addresses that are actually implemented in the system
+  type: Address_Set
+  source_quote: "The standard RISC-V ISA sets aside a 12-bit encoding space (csr[11:0]) for up to 4,096 CSRs"
+  rationale: The phrase "up to 4,096" indicates implementations choose which subset of CSRs to implement
+  constraints:
+    - Must be valid 12-bit addresses (0x000-0xFFF)
+    - Must respect conventional accessibility encoding in csr[11:8]
+  scope: Per implementation
+  properties:
+    address_width: 12
+    max_addresses: 4096
+    format: "Set of implemented CSR addresses"
+  
+- name: csr_read_write_accessibility_convention_adherence
+  description: Whether the implementation follows the conventional CSR address mapping for read/write accessibility
+  type: Boolean
+  source_quote: "By convention, the upper 4 bits of the CSR address (csr[11:8]) are used to encode the read and write accessibility"
+  rationale: The use of "by convention" suggests this is a recommended practice but not strictly mandated, allowing implementation flexibility
+  default_value: true
+  scope: Per implementation
+  note: "Convention suggests csr[11:10] encode R/W vs RO, and csr[9:8] encode minimum privilege level"
+  
+- name: csr_accessibility_encoding_scheme
+  description: The scheme used to encode CSR accessibility in the address bits
+  type: Enum
+  possible_values:
+    - conventional_standard
+    - custom_implementation_specific
+  source_quote: "By convention, the upper 4 bits of the CSR address (csr[11:8]) are used to encode the read and write accessibility"
+  rationale: "By convention" # indicates this is not mandatory, allowing implementations to potentially use alternative encoding schemes
+  default_value: conventional_standard
+  scope: Per implementation
+  conventional_mapping:
+    csr_11_10_encoding:
+      "00": read_write
+      "01": read_write
+      "10": read_write
+      "11": read_only
+    csr_9_8_encoding:
+      "00": user_mode_accessible
+      "01": supervisor_mode_accessible
+      "10": reserved_or_hypervisor
+      "11": machine_mode_accessible
+  
+- name: csr_read_write_permission_bits
+  description: The encoding in csr[11:10] that determines if a CSR is read/write or read-only
+  type: Bitfield
+  width: 2
+  location: "csr[11:10]"
+  source_quote: "The top two bits (csr[11:10]) indicate whether the register is read/write (00,01, or 10) or read-only (11)"
+  rationale: While the conventional encoding is specified, implementations choose which CSRs to make read-only vs read-write
+  scope: Per CSR in implementation
+  encoding:
+    read_write_values: ["00", "01", "10"]
+    read_only_value: "11"
+  properties:
+    bit_position: "[11:10]"
+    controls: "Read/Write vs Read-Only accessibility"
+  
+- name: csr_minimum_privilege_level_bits
+  description: The encoding in csr[9:8] that determines the lowest privilege level that can access the CSR
+  type: Bitfield
+  width: 2
+  location: "csr[9:8]"
+  source_quote: "The next two bits (csr[9:8]) encode the lowest privilege level that can access the CSR"
+  rationale: Implementations choose which privilege levels are required for each CSR they implement
+  scope: Per CSR in implementation
+  properties:
+    bit_position: "[9:8]"
+    controls: "Minimum privilege level for access"
+  typical_encoding:
+    "00": "User mode (U)"
+    "01": "Supervisor mode (S)"
+    "10": "Hypervisor mode (H) or reserved"
+    "11": "Machine mode (M)"
+  
+- name: read_only_csr_set
+  description: The set of CSRs implemented as read-only registers (csr[11:10] = 11)
+  type: Address_Set
+  source_quote: "The top two bits (csr[11:10]) indicate whether the register is read/write (00,01, or 10) or read-only (11)"
+  rationale: Implementations choose which CSRs are read-only based on their functionality
+  constraints:
+    - All addresses in this set must have csr[11:10] = 11 if following convention
+  scope: Per implementation
+  properties:
+    identifier: "CSR addresses with read-only access"
+    address_pattern: "csr[11:10] = 0b11"
+  
+- name: read_write_csr_set
+  description: The set of CSRs implemented as read-write registers (csr[11:10] = 00, 01, or 10)
+  type: Address_Set
+  source_quote: "The top two bits (csr[11:10]) indicate whether the register is read/write (00,01, or 10) or read-only (11)"
+  rationale: Implementations choose which CSRs are read-write based on their functionality
+  constraints:
+    - All addresses in this set must have csr[11:10] != 11 if following convention
+  scope: Per implementation
+  properties:
+    identifier: "CSR addresses with read-write access"
+    address_patterns: ["csr[11:10] = 0b00", "csr[11:10] = 0b01", "csr[11:10] = 0b10"]
+  
+- name: privilege_level_csr_partitioning
+  description: How CSRs are distributed across different privilege levels in the implementation
+  type: Implementation_Specific_Mapping
+  source_quote: "The next two bits (csr[9:8]) encode the lowest privilege level that can access the CSR"
+  rationale: Implementations decide which CSRs to place at each privilege level based on implemented features
+  scope: Per implementation
+  properties:
+    user_mode_csrs: "CSRs with csr[9:8] = 0b00"
+    supervisor_mode_csrs: "CSRs with csr[9:8] = 0b01"
+    hypervisor_mode_csrs: "CSRs with csr[9:8] = 0b10"
+    machine_mode_csrs: "CSRs with csr[9:8] = 0b11"
+  note: "Actual partitioning depends on which privilege modes are implemented"
+  
+- name: custom_csr_address_allocation
+  description: Implementation-specific CSR addresses allocated within the conventional address space
+  type: Address_Range_Set
+  source_quote: "The standard RISC-V ISA sets aside a 12-bit encoding space (csr[11:0]) for up to 4,096 CSRs"
+  rationale: While standard CSRs have defined addresses, implementations may allocate custom CSRs in unused portions of the address space
+  constraints:
+    - Must not conflict with standard CSR addresses
+    - Should follow conventional accessibility encoding
+    - Total addresses limited to 4,096
+  scope: Per implementation
+  properties:
+    address_space: "12-bit (0x000-0xFFF)"
+    allocation_strategy: "Implementation-defined for non-standard CSRs"
