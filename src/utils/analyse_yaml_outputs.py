@@ -9,15 +9,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
-from typing import Dict, List, Tuple, Set, Optional
+from typing import Dict, List, Tuple
 import numpy as np
 import argparse
 import sys
 
-# Import schema extraction module
-from src.one_shot.extract_schema_keys import extract_all_schema_keys, compute_novelty_score
+from src.utils.extract_schema_keys import extract_all_schema_keys, compute_novelty_score
 
-# Set style for better-looking plots
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (12, 6)
 plt.rcParams['font.size'] = 10
@@ -52,7 +50,6 @@ def analyze_yaml_file(filepath: str) -> Tuple[int, float, int, set]:
     quantity = len(data)
     all_keys = get_all_unique_keys(data)
     
-    # Count keys per item
     key_counts = [count_unique_keys(item) for item in data]
     avg_quality = np.mean(key_counts) if key_counts else 0
     max_quality = max(key_counts) if key_counts else 0
@@ -71,17 +68,14 @@ def extract_model_info(filename: str) -> Tuple[str, str, str]:
     """
     stem = Path(filename).stem
     
-    # Split by underscore to separate model and rest
     parts = stem.split('_')
     if len(parts) < 2:
         return stem, "unknown", "1"
     
-    model_name = parts[0]  # claude, gemini, gpt, grok
+    model_name = parts[0]
     
-    # Find snippet number
     if '-snippet_' in stem:
         version_part, snippet_num = stem.split('-snippet_')
-        # Remove model name from version part
         version = version_part.replace(f"{model_name}_", "")
     else:
         version = '_'.join(parts[1:])
@@ -103,7 +97,6 @@ def discover_yaml_files(directory: str) -> Dict[str, str]:
     yaml_files = {}
     for filepath in dir_path.glob("*.yaml"):
         model_name, version, snippet = extract_model_info(filepath.name)
-        # Create display name
         display_name = f"{model_name}_{version}_snippet_{snippet}"
         yaml_files[display_name] = str(filepath)
     
@@ -130,18 +123,15 @@ def group_by_model_and_snippet(results_df: pd.DataFrame) -> Dict:
         parts = row['Model'].split('_')
         model = parts[0]
         
-        # Extract snippet number
         if 'snippet' in row['Model']:
             snippet = row['Model'].split('snippet_')[-1]
         else:
             snippet = '1'
         
-        # Group by model
         if model not in grouped['by_model']:
             grouped['by_model'][model] = []
         grouped['by_model'][model].append(row)
         
-        # Group by snippet
         if snippet not in grouped['by_snippet']:
             grouped['by_snippet'][snippet] = []
         grouped['by_snippet'][snippet].append(row)
@@ -152,11 +142,9 @@ def group_by_model_and_snippet(results_df: pd.DataFrame) -> Dict:
 def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
     """Create comprehensive comparison visualizations."""
     
-    # Extract model names for coloring
     df['ModelName'] = df['Model'].apply(lambda x: x.split('_')[0])
     df['Snippet'] = df['Model'].apply(lambda x: x.split('snippet_')[-1] if 'snippet' in x else '1')
     
-    # Define color palette for models
     model_colors = {
         'claude': '#FF6B6B',
         'gemini': '#4ECDC4', 
@@ -169,10 +157,8 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
     
     df['Color'] = df['ModelName'].map(model_colors)
     
-    # Determine if novelty score is available
     has_novelty = 'Novelty_Score' in df.columns
     
-    # Create main visualization - adjust layout based on novelty availability
     if has_novelty:
         fig = plt.figure(figsize=(20, 14))
         gs = fig.add_gridspec(3, 4, hspace=0.3, wspace=0.3)
@@ -183,7 +169,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
     fig.suptitle('LLM YAML Output Analysis: Comprehensive Comparison', 
                  fontsize=18, fontweight='bold', y=0.995)
     
-    # 1. Quantity by Model (grouped bar chart)
     ax1 = fig.add_subplot(gs[0, 0])
     models = df['ModelName'].unique()
     snippets = sorted(df['Snippet'].unique())
@@ -206,7 +191,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
     ax1.legend()
     ax1.grid(axis='y', alpha=0.3)
     
-    # 2. Average Quality by Model
     ax2 = fig.add_subplot(gs[0, 1])
     for i, snippet in enumerate(snippets):
         snippet_data = df[df['Snippet'] == snippet]
@@ -223,7 +207,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
     ax2.legend()
     ax2.grid(axis='y', alpha=0.3)
     
-    # 3. Unique Field Types
     ax3 = fig.add_subplot(gs[0, 2])
     for i, snippet in enumerate(snippets):
         snippet_data = df[df['Snippet'] == snippet]
@@ -240,7 +223,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
     ax3.legend()
     ax3.grid(axis='y', alpha=0.3)
     
-    # 4. Novelty Score (if available)
     if has_novelty:
         ax_nov = fig.add_subplot(gs[0, 3])
         for i, snippet in enumerate(snippets):
@@ -258,7 +240,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
         ax_nov.legend()
         ax_nov.grid(axis='y', alpha=0.3)
     
-    # 5. Quality vs Quantity Scatter Plot
     if has_novelty:
         ax4 = fig.add_subplot(gs[1, :2])
     else:
@@ -271,7 +252,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
                    alpha=0.6, edgecolors='black', linewidth=2,
                    label=model)
         
-        # Add labels for each point
         for _, row in model_data.iterrows():
             ax4.annotate(f"S{row['Snippet']}", 
                         (row['Quantity'], row['Avg_Quality']),
@@ -284,13 +264,11 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
     ax4.legend(title='Model', fontsize=10)
     ax4.grid(True, alpha=0.3)
     
-    # 6. Overall Rankings Bar Chart
     if has_novelty:
         ax5 = fig.add_subplot(gs[1, 2:])
     else:
         ax5 = fig.add_subplot(gs[1, 2])
     
-    # Calculate composite score (normalized quantity * normalized quality * normalized novelty)
     df['Norm_Quantity'] = (df['Quantity'] - df['Quantity'].min()) / (df['Quantity'].max() - df['Quantity'].min() + 0.001)
     df['Norm_Quality'] = (df['Avg_Quality'] - df['Avg_Quality'].min()) / (df['Avg_Quality'].max() - df['Avg_Quality'].min() + 0.001)
     
@@ -311,7 +289,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
     ax5.set_title(f'Overall Rankings\n(Quality + Quantity{title_suffix})', fontweight='bold')
     ax5.grid(axis='x', alpha=0.3)
     
-    # 7. Detailed Metrics Heatmap
     if has_novelty:
         ax6 = fig.add_subplot(gs[2, :])
         heatmap_cols = ['Quantity', 'Avg_Quality', 'Max_Quality', 'Unique_Keys', 'Novelty_Score']
@@ -319,10 +296,8 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
         ax6 = fig.add_subplot(gs[2, :])
         heatmap_cols = ['Quantity', 'Avg_Quality', 'Max_Quality', 'Unique_Keys']
     
-    # Prepare heatmap data
     heatmap_data = df[['Model'] + heatmap_cols].set_index('Model')
     
-    # Normalize for better visualization
     heatmap_normalized = (heatmap_data - heatmap_data.min()) / (heatmap_data.max() - heatmap_data.min())
     
     sns.heatmap(heatmap_normalized.T, annot=heatmap_data.T, fmt='.2f', 
@@ -335,12 +310,10 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
     plt.savefig(f'{output_dir}/comprehensive_analysis.png', dpi=300, bbox_inches='tight')
     print(f"Comprehensive visualization saved to: {output_dir}/comprehensive_analysis.png")
     
-    # Create novelty-specific visualization if available
     if has_novelty:
         fig_nov, axes_nov = plt.subplots(2, 2, figsize=(16, 10))
         fig_nov.suptitle('Novelty Analysis: Novel vs Standard Parameters', fontsize=16, fontweight='bold')
         
-        # 1. Novelty Score by Model
         ax_n1 = axes_nov[0, 0]
         df_sorted_nov = df.sort_values('Novelty_Score', ascending=False)
         colors_n1 = [df_sorted_nov.iloc[i]['Color'] for i in range(len(df_sorted_nov))]
@@ -351,7 +324,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
         ax_n1.set_title('Novelty Score Ranking')
         ax_n1.grid(axis='y', alpha=0.3)
         
-        # 2. Novelty Ratio
         ax_n2 = axes_nov[0, 1]
         df_sorted_ratio = df.sort_values('Novelty_Ratio', ascending=False)
         colors_n2 = [df_sorted_ratio.iloc[i]['Color'] for i in range(len(df_sorted_ratio))]
@@ -363,11 +335,9 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
         ax_n2.set_ylim([0, 1])
         ax_n2.grid(axis='y', alpha=0.3)
         
-        # Add percentage labels
         for i, v in enumerate(df_sorted_ratio['Novelty_Ratio']):
             ax_n2.text(i, v + 0.02, f'{v*100:.1f}%', ha='center', fontsize=8)
         
-        # 3. Novel vs Standard Parameters (Stacked Bar)
         ax_n3 = axes_nov[1, 0]
         x_pos = np.arange(len(df))
         ax_n3.bar(x_pos, df['Matched_Standard'], label='Standard', color='#3498db', alpha=0.8)
@@ -380,7 +350,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
         ax_n3.legend()
         ax_n3.grid(axis='y', alpha=0.3)
         
-        # 4. Novelty vs Quality Scatter
         ax_n4 = axes_nov[1, 1]
         for model in models:
             model_data = df[df['ModelName'] == model]
@@ -405,7 +374,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
         plt.savefig(f'{output_dir}/novelty_analysis.png', dpi=300, bbox_inches='tight')
         print(f"Novelty analysis saved to: {output_dir}/novelty_analysis.png")
     
-    # Create snippet-specific comparison
     fig2, axes2 = plt.subplots(1, len(snippets), figsize=(7*len(snippets), 6))
     if len(snippets) == 1:
         axes2 = [axes2]
@@ -418,7 +386,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
         
         x_pos = np.arange(len(snippet_data))
         
-        # Create grouped bars
         if has_novelty:
             width = 0.2
             ax.bar(x_pos - 1.5*width, snippet_data['Quantity'], width, label='Quantity', alpha=0.8, color='#3498db')
@@ -442,178 +409,6 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: str = '/home/claude'):
     plt.tight_layout()
     plt.savefig(f'{output_dir}/snippet_comparison.png', dpi=300, bbox_inches='tight')
     print(f"Snippet comparison saved to: {output_dir}/snippet_comparison.png")
-    """Create comprehensive comparison visualizations."""
-    
-    # Extract model names for coloring
-    df['ModelName'] = df['Model'].apply(lambda x: x.split('_')[0])
-    df['Snippet'] = df['Model'].apply(lambda x: x.split('snippet_')[-1] if 'snippet' in x else '1')
-    
-    # Define color palette for models
-    model_colors = {
-        'claude': '#FF6B6B',
-        'gemini': '#4ECDC4', 
-        'gpt': '#45B7D1',
-        'grok': '#95E1D3',
-        'deepseek': '#A569BD', 
-        'llama': '#F39C12',
-        'qwen': '#45B39D'
-    }
-    
-    df['Color'] = df['ModelName'].map(model_colors)
-    
-    # Create main visualization with 6 subplots
-    fig = plt.figure(figsize=(18, 12))
-    gs = fig.add_gridspec(3, 3, hspace=0.3, wspace=0.3)
-    
-    fig.suptitle('LLM YAML Output Analysis: Comprehensive Comparison', 
-                 fontsize=18, fontweight='bold', y=0.995)
-    
-    # 1. Quantity by Model (grouped bar chart)
-    ax1 = fig.add_subplot(gs[0, 0])
-    models = df['ModelName'].unique()
-    snippets = sorted(df['Snippet'].unique())
-    
-    x = np.arange(len(models))
-    width = 0.35
-    
-    for i, snippet in enumerate(snippets):
-        snippet_data = df[df['Snippet'] == snippet]
-        quantities = [snippet_data[snippet_data['ModelName'] == m]['Quantity'].values[0] 
-                     if len(snippet_data[snippet_data['ModelName'] == m]) > 0 else 0 
-                     for m in models]
-        ax1.bar(x + i*width, quantities, width, label=f'Snippet {snippet}', alpha=0.8)
-    
-    ax1.set_xlabel('Model', fontweight='bold')
-    ax1.set_ylabel('Total Items Extracted', fontweight='bold')
-    ax1.set_title('Quantity Comparison by Model')
-    ax1.set_xticks(x + width/2)
-    ax1.set_xticklabels(models)
-    ax1.legend()
-    ax1.grid(axis='y', alpha=0.3)
-    
-    # 2. Average Quality by Model
-    ax2 = fig.add_subplot(gs[0, 1])
-    for i, snippet in enumerate(snippets):
-        snippet_data = df[df['Snippet'] == snippet]
-        avg_qualities = [snippet_data[snippet_data['ModelName'] == m]['Avg_Quality'].values[0] 
-                        if len(snippet_data[snippet_data['ModelName'] == m]) > 0 else 0 
-                        for m in models]
-        ax2.bar(x + i*width, avg_qualities, width, label=f'Snippet {snippet}', alpha=0.8)
-    
-    ax2.set_xlabel('Model', fontweight='bold')
-    ax2.set_ylabel('Avg Fields per Item', fontweight='bold')
-    ax2.set_title('Average Quality Comparison')
-    ax2.set_xticks(x + width/2)
-    ax2.set_xticklabels(models)
-    ax2.legend()
-    ax2.grid(axis='y', alpha=0.3)
-    
-    # 3. Unique Field Types
-    ax3 = fig.add_subplot(gs[0, 2])
-    for i, snippet in enumerate(snippets):
-        snippet_data = df[df['Snippet'] == snippet]
-        unique_keys = [snippet_data[snippet_data['ModelName'] == m]['Unique_Keys'].values[0] 
-                      if len(snippet_data[snippet_data['ModelName'] == m]) > 0 else 0 
-                      for m in models]
-        ax3.bar(x + i*width, unique_keys, width, label=f'Snippet {snippet}', alpha=0.8)
-    
-    ax3.set_xlabel('Model', fontweight='bold')
-    ax3.set_ylabel('Number of Unique Field Types', fontweight='bold')
-    ax3.set_title('Field Type Diversity')
-    ax3.set_xticks(x + width/2)
-    ax3.set_xticklabels(models)
-    ax3.legend()
-    ax3.grid(axis='y', alpha=0.3)
-    
-    # 4. Quality vs Quantity Scatter Plot
-    ax4 = fig.add_subplot(gs[1, :2])
-    for model in models:
-        model_data = df[df['ModelName'] == model]
-        ax4.scatter(model_data['Quantity'], model_data['Avg_Quality'], 
-                   s=300, c=model_colors.get(model, '#999999'), 
-                   alpha=0.6, edgecolors='black', linewidth=2,
-                   label=model)
-        
-        # Add labels for each point
-        for _, row in model_data.iterrows():
-            ax4.annotate(f"S{row['Snippet']}", 
-                        (row['Quantity'], row['Avg_Quality']),
-                        xytext=(5, 5), textcoords='offset points',
-                        fontsize=8, fontweight='bold')
-    
-    ax4.set_xlabel('Quantity (Total Items)', fontweight='bold', fontsize=12)
-    ax4.set_ylabel('Quality (Avg Fields per Item)', fontweight='bold', fontsize=12)
-    ax4.set_title('Quality vs Quantity Trade-off Analysis', fontsize=12, fontweight='bold')
-    ax4.legend(title='Model', fontsize=10)
-    ax4.grid(True, alpha=0.3)
-    
-    # 5. Overall Rankings Bar Chart
-    ax5 = fig.add_subplot(gs[1, 2])
-    
-    # Calculate composite score (normalized quantity * normalized quality)
-    df['Norm_Quantity'] = (df['Quantity'] - df['Quantity'].min()) / (df['Quantity'].max() - df['Quantity'].min() + 0.001)
-    df['Norm_Quality'] = (df['Avg_Quality'] - df['Avg_Quality'].min()) / (df['Avg_Quality'].max() - df['Avg_Quality'].min() + 0.001)
-    df['Composite_Score'] = (df['Norm_Quantity'] + df['Norm_Quality']) / 2
-    
-    df_sorted = df.sort_values('Composite_Score', ascending=True)
-    colors_list = [df_sorted.iloc[i]['Color'] for i in range(len(df_sorted))]
-    
-    ax5.barh(range(len(df_sorted)), df_sorted['Composite_Score'], color=colors_list, alpha=0.7)
-    ax5.set_yticks(range(len(df_sorted)))
-    ax5.set_yticklabels(df_sorted['Model'], fontsize=8)
-    ax5.set_xlabel('Composite Score', fontweight='bold')
-    ax5.set_title('Overall Rankings\n(Quality + Quantity)', fontweight='bold')
-    ax5.grid(axis='x', alpha=0.3)
-    
-    # 6. Detailed Metrics Heatmap
-    ax6 = fig.add_subplot(gs[2, :])
-    
-    # Prepare heatmap data
-    heatmap_data = df[['Model', 'Quantity', 'Avg_Quality', 'Max_Quality', 'Unique_Keys']].set_index('Model')
-    
-    # Normalize for better visualization
-    heatmap_normalized = (heatmap_data - heatmap_data.min()) / (heatmap_data.max() - heatmap_data.min())
-    
-    sns.heatmap(heatmap_normalized.T, annot=heatmap_data.T, fmt='.2f', 
-                cmap='YlOrRd', cbar_kws={'label': 'Normalized Score'},
-                linewidths=0.5, ax=ax6)
-    ax6.set_title('Detailed Metrics Heatmap (annotated with actual values)', fontweight='bold', fontsize=12)
-    ax6.set_xlabel('Model', fontweight='bold')
-    ax6.set_ylabel('Metric', fontweight='bold')
-    
-    plt.savefig(f'{output_dir}/comprehensive_analysis.png', dpi=300, bbox_inches='tight')
-    print(f"Comprehensive visualization saved to: {output_dir}/comprehensive_analysis.png")
-    
-    # Create snippet-specific comparison
-    fig2, axes2 = plt.subplots(1, len(snippets), figsize=(7*len(snippets), 6))
-    if len(snippets) == 1:
-        axes2 = [axes2]
-    
-    fig2.suptitle('Snippet-by-Snippet Comparison', fontsize=16, fontweight='bold')
-    
-    for idx, snippet in enumerate(snippets):
-        ax = axes2[idx]
-        snippet_data = df[df['Snippet'] == snippet].sort_values('Quantity', ascending=False)
-        
-        x_pos = np.arange(len(snippet_data))
-        
-        # Create grouped bars
-        width = 0.25
-        ax.bar(x_pos - width, snippet_data['Quantity'], width, label='Quantity', alpha=0.8, color='#3498db')
-        ax.bar(x_pos, snippet_data['Avg_Quality']*2, width, label='Avg Quality (×2)', alpha=0.8, color='#e74c3c')
-        ax.bar(x_pos + width, snippet_data['Unique_Keys'], width, label='Unique Keys', alpha=0.8, color='#2ecc71')
-        
-        ax.set_xlabel('Model', fontweight='bold')
-        ax.set_ylabel('Value', fontweight='bold')
-        ax.set_title(f'Snippet {snippet}', fontweight='bold')
-        ax.set_xticks(x_pos)
-        ax.set_xticklabels(snippet_data['ModelName'], rotation=45, ha='right')
-        ax.legend()
-        ax.grid(axis='y', alpha=0.3)
-    
-    plt.tight_layout()
-    plt.savefig(f'{output_dir}/snippet_comparison.png', dpi=300, bbox_inches='tight')
-    print(f"Snippet comparison saved to: {output_dir}/snippet_comparison.png")
 
 
 def main():
@@ -622,13 +417,10 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Basic usage
   python analyze_yaml_outputs.py /path/to/outputs_one_shot
   
-  # With novelty scoring
   python analyze_yaml_outputs.py /path/to/outputs_one_shot -s /path/to/schema_dir
   
-  # With custom output directory
   python analyze_yaml_outputs.py ./outputs_one_shot -o ./results -s ./schemas
         """
     )
@@ -646,7 +438,6 @@ Examples:
     print(f"\nAnalyzing directory: {args.directory}")
     print(f"Output directory: {args.output}\n")
     
-    # Extract schema keys if schema directory provided
     schema_keys = None
     if args.schema:
         print(f"Schema directory: {args.schema}")
@@ -660,7 +451,6 @@ Examples:
         print("No schema directory provided - novelty scoring disabled")
         print("(Use -s/--schema to enable novelty scoring)\n")
     
-    # Discover YAML files
     try:
         yaml_files = discover_yaml_files(args.directory)
     except ValueError as e:
@@ -672,7 +462,6 @@ Examples:
         print(f"  - {name}")
     print()
     
-    # Analyze each file
     results = []
     for name, filepath in sorted(yaml_files.items()):
         print(f"Analyzing: {name}...")
@@ -688,7 +477,6 @@ Examples:
                 'Keys': sorted(all_keys)
             }
             
-            # Compute novelty metrics if schema keys available
             if schema_keys is not None:
                 novelty_metrics = compute_novelty_score(all_keys, schema_keys)
                 result['Novelty_Score'] = novelty_metrics['novelty_score']
@@ -707,10 +495,8 @@ Examples:
         print("No files were successfully analyzed!")
         sys.exit(1)
     
-    # Create DataFrame
     df = pd.DataFrame(results)
     
-    # Print detailed results
     print("\n" + "=" * 80)
     print("ANALYSIS RESULTS")
     print("=" * 80)
@@ -740,7 +526,6 @@ Examples:
     
     print("\n" + "=" * 80)
     
-    # Group analysis
     grouped = group_by_model_and_snippet(df)
     
     print("\nGROUPED ANALYSIS:")
@@ -754,11 +539,9 @@ Examples:
     
     print("\n" + "=" * 80)
     
-    # Create visualizations
     print("\nGenerating visualizations...")
     create_comparison_plots(df, args.output)
     
-    # Create summary table
     has_novelty = 'Novelty_Score' in df.columns
     
     if has_novelty:
@@ -809,12 +592,10 @@ Examples:
     table.set_fontsize(9)
     table.scale(1, 2)
     
-    # Style header
     for i in range(len(col_labels)):
         table[(0, i)].set_facecolor('#34495e')
         table[(0, i)].set_text_props(weight='bold', color='white')
     
-    # Style rows
     for i in range(1, len(table_data) + 1):
         color = '#ecf0f1' if i % 2 == 0 else 'white'
         for j in range(len(col_labels)):
@@ -824,7 +605,6 @@ Examples:
     plt.savefig(f'{args.output}/summary_table.png', dpi=300, bbox_inches='tight')
     print(f"Summary table saved to: {args.output}/summary_table.png")
     
-    # Export detailed CSV
     if has_novelty:
         df_export = df.drop(['Keys', 'Novel_Params'], axis=1)
     else:
@@ -833,7 +613,6 @@ Examples:
     df_export.to_csv(f'{args.output}/analysis_results.csv', index=False)
     print(f"Detailed results saved to: {args.output}/analysis_results.csv")
     
-    # Export detailed report with all keys
     with open(f'{args.output}/detailed_report.txt', 'w') as f:
         f.write("=" * 80 + "\n")
         f.write("DETAILED ANALYSIS REPORT\n")
@@ -862,7 +641,6 @@ Examples:
     
     print(f"Detailed report saved to: {args.output}/detailed_report.txt")
     
-    # Save schema keys reference if used
     if schema_keys is not None:
         with open(f'{args.output}/standard_schema_keys.txt', 'w') as f:
             f.write("# Standard Schema Parameters\n")
